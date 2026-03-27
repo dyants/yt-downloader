@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Downloader - Download Video & Audio</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 600px;
+        width: 100%;
+        padding: 40px;
+        animation: slideIn 0.5s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        color: #667eea;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        color: #666;
+        font-size: 1.1em;
+      }
+
+      .logo {
+        font-size: 60px;
+        margin-bottom: 20px;
+      }
+
+      .input-group {
+        margin-bottom: 25px;
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+        font-size: 0.95em;
+      }
+
+      .input-group input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1em;
+        transition: all 0.3s ease;
+      }
+
+      .input-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .radio-group {
+        margin-bottom: 30px;
+      }
+
+      .radio-group label {
+        display: block;
+        margin-bottom: 10px;
+        color: #333;
+        font-weight: 600;
+        font-size: 0.95em;
+      }
+
+      .radio-options {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+      }
+
+      .radio-option {
+        flex: 1;
+        min-width: 150px;
+      }
+
+      .radio-option input[type="radio"] {
+        display: none;
+      }
+
+      .radio-option label {
+        display: block;
+        padding: 15px 20px;
+        background: #f5f5f5;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.3s ease;
+        font-weight: 500;
+      }
+
+      .radio-option input[type="radio"]:checked + label {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+      }
+
+      .radio-option label:hover {
+        border-color: #667eea;
+      }
+
+      .btn-container {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-primary:active {
+        transform: translateY(0);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .info-box {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+        display: none;
+      }
+
+      .info-box.show {
+        display: block;
+        animation: fadeIn 0.5s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .info-box h3 {
+        color: #667eea;
+        margin-bottom: 15px;
+        font-size: 1.2em;
+      }
+
+      .info-item {
+        margin-bottom: 10px;
+        color: #555;
+      }
+
+      .info-item strong {
+        color: #333;
+      }
+
+      .thumbnail {
+        width: 100%;
+        border-radius: 10px;
+        margin-top: 15px;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+        display: none;
+      }
+
+      .loading.show {
+        display: block;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error {
+        background: #fee;
+        border-left-color: #f44336;
+        color: #c62828;
+      }
+
+      .success {
+        background: #e8f5e9;
+        border-left-color: #4caf50;
+        color: #2e7d32;
+      }
+
+      .debug-console {
+        margin-top: 20px;
+        padding: 15px;
+        background: #1e1e1e;
+        color: #00ff00;
+        border-radius: 10px;
+        font-family: "Courier New", monospace;
+        font-size: 0.85em;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+      }
+
+      .debug-console.hide {
+        display: block;
+      }
+
+      .debug-console div {
+        margin: 5px 0;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 25px;
+        }
+
+        .header h1 {
+          font-size: 2em;
+        }
+
+        .radio-options {
+          flex-direction: column;
+        }
+
+        .btn-container {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="logo">🎥</div>
+        <h1>YouTube Downloader</h1>
+        <p>Download video atau audio dari YouTube dengan mudah</p>
+      </div>
+
+      <form id="downloadForm">
+        <div class="input-group">
+          <label for="youtubeUrl">URL Video YouTube</label>
+          <input
+            type="text"
+            id="youtubeUrl"
+            placeholder="https://www.youtube.com/watch?v=..."
+            required
+          />
+        </div>
+
+        <div class="radio-group">
+          <label>Pilih Format Download</label>
+          <div class="radio-options">
+            <div class="radio-option">
+              <input type="radio" id="info" name="format" value="info" />
+              <label for="info">📋 Info Video</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="mp4" name="format" value="mp4" checked />
+              <label for="mp4">🎬 Video (MP4)</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="mp3" name="format" value="mp3" />
+              <label for="mp3">🎵 Audio (MP3)</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-container">
+          <button type="submit" class="btn btn-primary" id="downloadBtn">
+            Cek dan Download
+          </button>
+        </div>
+      </form>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Sedang memproses...</p>
+      </div>
+
+      <div class="info-box" id="infoBox"></div>
+
+      <div class="debug-console" id="debugConsole"></div>
+    </div>
+
+    <script>
+      const form = document.getElementById("downloadForm");
+      const urlInput = document.getElementById("youtubeUrl");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const loading = document.getElementById("loading");
+      const infoBox = document.getElementById("infoBox");
+      // API Base URL - Relative path (otomatis ikut domain)
+      const API_BASE = "/api/youtube";
+
+      // Debug logging
+      function debugLog(message, data = null) {
+        console.log(message, data);
+        const debugDiv = document.createElement("div");
+        debugDiv.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        if (data) {
+          debugDiv.textContent += ": " + JSON.stringify(data).substring(0, 100);
+        }
+        debugConsole.appendChild(debugDiv);
+        debugConsole.scrollTop = debugConsole.scrollHeight;
+        debugConsole.classList.add("show");
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const url = urlInput.value.trim();
+        const format = document.querySelector(
+          'input[name="format"]:checked',
+        ).value;
+
+        debugLog("Form submitted", { url, format });
+
+        if (!url) {
+          showMessage("Masukkan URL YouTube terlebih dahulu!", "error");
+          debugLog("ERROR: URL kosong");
+          return;
+        }
+
+        // Validasi URL YouTube
+        if (!isValidYouTubeUrl(url)) {
+          showMessage("URL YouTube tidak valid!", "error");
+          debugLog("ERROR: URL tidak valid", url);
+          return;
+        }
+
+        debugLog("URL valid, memulai proses...");
+
+        // Reset info box
+        infoBox.classList.remove("show");
+        infoBox.innerHTML = "";
+
+        // Show loading
+        loading.classList.add("show");
+        downloadBtn.disabled = true;
+
+        try {
+          if (format === "info") {
+            debugLog("Mode: Get Info");
+            await getVideoInfo(url);
+          } else if (format === "mp4") {
+            debugLog("Mode: Download MP4");
+            await downloadVideo(url);
+          } else if (format === "mp3") {
+            debugLog("Mode: Download MP3");
+            await downloadAudio(url);
+          }
+        } catch (error) {
+          debugLog("ERROR CAUGHT", error.message);
+          showMessage("Terjadi kesalahan: " + error.message, "error");
+        } finally {
+          loading.classList.remove("show");
+          downloadBtn.disabled = false;
+        }
+      });
+
+      async function getVideoInfo(url) {
+        try {
+          const apiUrl = `${API_BASE}/info?url=${encodeURIComponent(url)}`;
+          debugLog("Fetching info from", apiUrl);
+
+          const response = await fetch(apiUrl);
+
+          debugLog("Response received", {
+            status: response.status,
+            ok: response.ok,
+            statusText: response.statusText,
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            debugLog("Error response body", errorText);
+            throw new Error(
+              `Gagal mendapatkan informasi video (${response.status})`,
+            );
+          }
+
+          const data = await response.json();
+          debugLog("Video info received", data);
+          displayVideoInfo(data);
+        } catch (error) {
+          debugLog("Get info error", error);
+          throw error;
+        }
+      }
+
+      async function downloadVideo(url) {
+        try {
+          const apiUrl = `${API_BASE}/download?url=${encodeURIComponent(url)}`;
+          debugLog("Downloading video from", apiUrl);
+
+          const response = await fetch(apiUrl);
+
+          debugLog("Download response", {
+            status: response.status,
+            ok: response.ok,
+            headers: Object.fromEntries(response.headers.entries()),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            debugLog("Download error response", errorText);
+            throw new Error(`Gagal mengunduh video (${response.status})`);
+          }
+
+          // Download file
+          const blob = await response.blob();
+          debugLog("Blob created", {
+            size: blob.size,
+            type: blob.type,
+          });
+
+          if (blob.size === 0) {
+            throw new Error("File kosong (0 bytes)");
+          }
+
+          const contentDisposition = response.headers.get(
+            "Content-Disposition",
+          );
+          let filename = "video.mp4";
+
+          if (contentDisposition) {
+            const filenameMatch =
+              contentDisposition.match(/filename="?([^"]+)"?/);
+            if (filenameMatch) {
+              filename = filenameMatch[1];
+            }
+          }
+
+          debugLog("Filename", filename);
+
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = downloadUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+
+          debugLog("Download triggered");
+
+          window.URL.revokeObjectURL(downloadUrl);
+          a.remove();
+
+          showMessage("Video berhasil diunduh!", "success");
+          debugLog("Download complete");
+        } catch (error) {
+          debugLog("Download video error", error);
+          throw error;
+        }
+      }
+
+      async function downloadAudio(url) {
+        try {
+          const apiUrl = `${API_BASE}/download-mp3?url=${encodeURIComponent(url)}`;
+          debugLog("Downloading audio from", apiUrl);
+
+          const response = await fetch(apiUrl);
+
+          debugLog("Download audio response", {
+            status: response.status,
+            ok: response.ok,
+            headers: Object.fromEntries(response.headers.entries()),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            debugLog("Download audio error response", errorText);
+            throw new Error(`Gagal mengunduh audio (${response.status})`);
+          }
+
+          // Download file
+          const blob = await response.blob();
+          debugLog("Audio blob created", {
+            size: blob.size,
+            type: blob.type,
+          });
+
+          if (blob.size === 0) {
+            throw new Error("File kosong (0 bytes)");
+          }
+
+          const contentDisposition = response.headers.get(
+            "Content-Disposition",
+          );
+          let filename = "audio.mp3";
+
+          if (contentDisposition) {
+            const filenameMatch =
+              contentDisposition.match(/filename="?([^"]+)"?/);
+            if (filenameMatch) {
+              filename = filenameMatch[1];
+            }
+          }
+
+          debugLog("Filename", filename);
+
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = downloadUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+
+          debugLog("Download triggered");
+
+          window.URL.revokeObjectURL(downloadUrl);
+          a.remove();
+
+          showMessage("Audio berhasil diunduh!", "success");
+          debugLog("Download complete");
+        } catch (error) {
+          debugLog("Download audio error", error);
+          throw error;
+        }
+      }
+
+      function displayVideoInfo(data) {
+        debugLog("Displaying video info");
+
+        let html = "<h3>📋 Informasi Video</h3>";
+
+        if (data.title) {
+          html += `<div class="info-item"><strong>Judul:</strong> ${data.title}</div>`;
+        }
+
+        if (data.author) {
+          html += `<div class="info-item"><strong>Channel:</strong> ${data.author}</div>`;
+        }
+
+        if (data.duration) {
+          html += `<div class="info-item"><strong>Durasi:</strong> ${formatDuration(data.duration)}</div>`;
+        }
+
+        if (data.views) {
+          html += `<div class="info-item"><strong>Views:</strong> ${formatNumber(data.views)}</div>`;
+        }
+
+        if (data.thumbnail) {
+          html += `<img src="${data.thumbnail}" alt="Thumbnail" class="thumbnail">`;
+        }
+
+        infoBox.innerHTML = html;
+        infoBox.classList.add("show");
+        infoBox.classList.remove("error");
+
+        debugLog("Info displayed successfully");
+      }
+
+      function showMessage(message, type = "error") {
+        debugLog("Showing message", { message, type });
+        infoBox.innerHTML = `<p>${message}</p>`;
+        infoBox.className = `info-box ${type} show`;
+      }
+
+      function isValidYouTubeUrl(url) {
+        const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+        return pattern.test(url);
+      }
+
+      function formatDuration(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+
+        if (hours > 0) {
+          return `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+        }
+        return `${minutes}:${String(secs).padStart(2, "0")}`;
+      }
+
+      function formatNumber(num) {
+        return new Intl.NumberFormat("id-ID").format(num);
+      }
+
+      debugLog("Page loaded, ready to use");
+    </script>
+  </body>
+</html>

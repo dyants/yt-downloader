@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Downloader</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 40px;
+        max-width: 600px;
+        width: 100%;
+        animation: slideUp 0.5s ease;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        color: #333;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        color: #666;
+        font-size: 1.1em;
+      }
+
+      .youtube-icon {
+        font-size: 4em;
+        margin-bottom: 10px;
+      }
+
+      .input-group {
+        margin-bottom: 25px;
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+        font-size: 0.95em;
+      }
+
+      .input-group input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1em;
+        transition: all 0.3s;
+      }
+
+      .input-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .options {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+      }
+
+      .option-card {
+        flex: 1;
+        min-width: 150px;
+        padding: 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: white;
+      }
+
+      .option-card:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+      }
+
+      .option-card.active {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .option-card .icon {
+        font-size: 2em;
+        margin-bottom: 8px;
+      }
+
+      .option-card .label {
+        font-weight: 600;
+        font-size: 1.1em;
+      }
+
+      .btn-download {
+        width: 100%;
+        padding: 18px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.2em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-download:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-download:active {
+        transform: translateY(0);
+      }
+
+      .btn-download:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      .info-box {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        display: none;
+      }
+
+      .info-box.show {
+        display: block;
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .info-box img {
+        width: 100%;
+        border-radius: 8px;
+        margin-bottom: 15px;
+      }
+
+      .info-box h3 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .info-box p {
+        color: #666;
+        margin-bottom: 5px;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        margin-top: 15px;
+      }
+
+      .loading.show {
+        display: block;
+      }
+
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error-message {
+        display: none;
+        padding: 15px;
+        background: #fee;
+        border-left: 4px solid #f44;
+        border-radius: 8px;
+        margin-top: 15px;
+        color: #c33;
+      }
+
+      .error-message.show {
+        display: block;
+        animation: fadeIn 0.3s ease;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 25px;
+        }
+
+        .header h1 {
+          font-size: 2em;
+        }
+
+        .options {
+          flex-direction: column;
+        }
+
+        .option-card {
+          min-width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="youtube-icon">🎥</div>
+        <h1>YouTube Downloader</h1>
+        <p>Download video atau audio dari YouTube dengan mudah</p>
+      </div>
+
+      <form id="downloadForm">
+        <div class="input-group">
+          <label for="videoUrl">URL Video YouTube</label>
+          <input
+            type="text"
+            id="videoUrl"
+            placeholder="https://www.youtube.com/watch?v=..."
+            required
+          />
+        </div>
+
+        <div class="input-group">
+          <label>Pilih Format Download</label>
+          <div class="options">
+            <div class="option-card" data-type="info">
+              <div class="icon">ℹ️</div>
+              <div class="label">Info</div>
+            </div>
+            <div class="option-card active" data-type="mp4">
+              <div class="icon">🎬</div>
+              <div class="label">MP4</div>
+            </div>
+            <div class="option-card" data-type="mp3">
+              <div class="icon">🎵</div>
+              <div class="label">MP3</div>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-download" id="downloadBtn">
+          Unduh Sekarang
+        </button>
+      </form>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p style="margin-top: 10px; color: #666">Memproses...</p>
+      </div>
+
+      <div class="error-message" id="errorMessage"></div>
+
+      <div class="info-box" id="infoBox"></div>
+    </div>
+
+    <script>
+      let selectedType = "mp4";
+
+      // Handle option selection
+      document.querySelectorAll(".option-card").forEach((card) => {
+        card.addEventListener("click", function () {
+          document
+            .querySelectorAll(".option-card")
+            .forEach((c) => c.classList.remove("active"));
+          this.classList.add("active");
+          selectedType = this.dataset.type;
+
+          // Clear info box when changing selection
+          document.getElementById("infoBox").classList.remove("show");
+        });
+      });
+
+      // Handle form submission
+      document
+        .getElementById("downloadForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const videoUrl = document.getElementById("videoUrl").value.trim();
+          const loadingEl = document.getElementById("loading");
+          const errorEl = document.getElementById("errorMessage");
+          const infoBoxEl = document.getElementById("infoBox");
+          const downloadBtn = document.getElementById("downloadBtn");
+
+          // Reset states
+          errorEl.classList.remove("show");
+          infoBoxEl.classList.remove("show");
+          loadingEl.classList.add("show");
+          downloadBtn.disabled = true;
+
+          try {
+            const baseUrl = "http://localhost:3000/api/youtube";
+
+            if (selectedType === "info") {
+              // Get video info
+              const response = await fetch(
+                `${baseUrl}/info?url=${encodeURIComponent(videoUrl)}`,
+              );
+
+              if (!response.ok) {
+                throw new Error("Gagal mengambil informasi video");
+              }
+
+              const data = await response.json();
+
+              // Display info
+              infoBoxEl.innerHTML = `
+                        ${data.thumbnail ? `<img src="${data.thumbnail}" alt="Thumbnail">` : ""}
+                        <h3>${data.title || "Tidak ada judul"}</h3>
+                        <p><strong>Durasi:</strong> ${data.duration || "N/A"}</p>
+                        <p><strong>Channel:</strong> ${data.author || "N/A"}</p>
+                        <p><strong>Views:</strong> ${data.views || "N/A"}</p>
+                    `;
+              infoBoxEl.classList.add("show");
+            } else {
+              // Download video or audio
+              const endpoint =
+                selectedType === "mp4" ? "download" : "download-mp3";
+              const downloadUrl = `${baseUrl}/${endpoint}?url=${encodeURIComponent(videoUrl)}`;
+
+              // Create hidden link and trigger download
+              const link = document.createElement("a");
+              link.href = downloadUrl;
+              link.download = "";
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+
+              // Show success message
+              infoBoxEl.innerHTML = `
+                        <h3>✅ Download Dimulai!</h3>
+                        <p>File ${selectedType.toUpperCase()} Anda sedang diunduh...</p>
+                    `;
+              infoBoxEl.classList.add("show");
+            }
+          } catch (error) {
+            errorEl.textContent =
+              "❌ " +
+              (error.message ||
+                "Terjadi kesalahan. Pastikan URL valid dan server berjalan.");
+            errorEl.classList.add("show");
+          } finally {
+            loadingEl.classList.remove("show");
+            downloadBtn.disabled = false;
+          }
+        });
+
+      // Auto-focus on input when page loads
+      window.addEventListener("load", () => {
+        document.getElementById("videoUrl").focus();
+      });
+    </script>
+  </body>
+</html>

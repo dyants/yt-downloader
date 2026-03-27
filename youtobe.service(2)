@@ -1,0 +1,79 @@
+import { exec } from "child_process";
+import { promisify } from "util";
+import { youtubeDl as youtubedl, Payload } from "youtube-dl-exec";
+
+const execAsync = promisify(exec);
+
+export class YoutubeService {
+  validateUrl(url: string): boolean {
+    const pattern =
+      /^(https?:\/\/)?((www\.|m\.)?youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/;
+    return pattern.test(url);
+  }
+
+  private cleanUrl(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname.includes("youtube.com")) {
+        const v = urlObj.searchParams.get("v");
+        if (v) {
+          return `https://www.youtube.com/watch?v=${v}`;
+        }
+      } else if (urlObj.hostname.includes("youtu.be")) {
+        return `https://www.youtube.com/watch?v=${urlObj.pathname.slice(1)}`;
+      }
+      return url;
+    } catch {
+      return url;
+    }
+  }
+
+  async getVideoInfo(url: string) {
+    const cleanUrl = this.cleanUrl(url);
+    try {
+      const output = (await youtubedl(cleanUrl, {
+        dumpSingleJson: true,
+        noCheckCertificates: true,
+        noWarnings: true,
+        preferFreeFormats: true,
+        addHeader: ["referer:youtube.com", "user-agent:googlebot"],
+      })) as Payload;
+
+      return {
+        title: output.title,
+        thumbnail: output.thumbnail,
+        formats: output.formats,
+        url: output.webpage_url,
+      };
+    } catch (error: any) {
+      throw new Error(`Gagal mendapatkan info video: ${error.message}`);
+    }
+  }
+
+  async downloadVideo(url: string, outputPath: string): Promise<void> {
+    const cleanUrl = this.cleanUrl(url);
+    try {
+      await youtubedl(cleanUrl, {
+        output: outputPath,
+        format: "mp4",
+      });
+    } catch (error: any) {
+      throw new Error(`Gagal mengunduh video: ${error.message}`);
+    }
+  }
+
+  async downloadAudio(url: string, outputPath: string): Promise<void> {
+    const cleanUrl = this.cleanUrl(url);
+    try {
+      await youtubedl(cleanUrl, {
+        output: outputPath,
+        extractAudio: true,
+        audioFormat: "mp3",
+        audioQuality: "192k" as any,
+        ffmpegLocation: "ffmpeg",
+      });
+    } catch (error: any) {
+      throw new Error(`Gagal mengunduh audio: ${error.message}`);
+    }
+  }
+}
