@@ -1,25 +1,42 @@
-import ytdl from "@distube/ytdl-core";
+import { youtubeDl as youtubedl, Payload } from "youtube-dl-exec";
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Path ke cookies file yang ditulis oleh server.ts saat startup
+const COOKIES_PATH = path.resolve(__dirname, "../../cookies.txt");
+const hasCookies = () =>
+  fs.existsSync(COOKIES_PATH) && fs.statSync(COOKIES_PATH).size > 0;
 
 export class YoutubeService {
   validateUrl(url: string): boolean {
-    return ytdl.validateURL(url);
+    return /^https?:\/\/(www\.)?youtube\.com\/watch\?v=/.test(url);
   }
 
   async getVideoInfo(url: string) {
     try {
-      const info = await ytdl.getInfo(url);
-      const details = info.videoDetails;
+      const output = (await youtubedl(url, {
+        dumpSingleJson: true,
+        noCheckCertificates: true,
+        noWarnings: true,
+        preferFreeFormats: true,
+        noPlaylist: true,
+        // Gunakan cookies jika tersedia (untuk bypass bot detection di server)
+        ...(hasCookies() ? { cookies: COOKIES_PATH } : {}),
+      })) as Payload;
 
       return {
-        title: details.title,
-        thumbnail:
-          details.thumbnails?.[details.thumbnails.length - 1]?.url ?? "",
-        formats: info.formats,
-        url: details.video_url,
-        author: details.author?.name ?? "Unknown",
-        duration: parseInt(details.lengthSeconds, 10) || 0,
-        views: parseInt(details.viewCount, 10) || 0,
+        title: output.title,
+        thumbnail: output.thumbnail,
+        formats: output.formats,
+        url: output.webpage_url,
+        author: output.uploader || output.channel || "Unknown",
+        duration: output.duration || 0,
+        views: output.view_count || 0,
       };
     } catch (error: any) {
       throw new Error(`Gagal mendapatkan info video: ${error.message}`);
@@ -28,26 +45,13 @@ export class YoutubeService {
 
   async downloadVideo(url: string, outputPath: string): Promise<void> {
     try {
-      const info = await ytdl.getInfo(url);
-
-      // Prefer a format that has both video and audio; fall back to any mp4
-      const format =
-        ytdl.chooseFormat(info.formats, {
-          quality: "highestvideo",
-          filter: (f) => f.container === "mp4" && !!f.hasVideo && !!f.hasAudio,
-        }) ??
-        ytdl.chooseFormat(info.formats, {
-          quality: "highestvideo",
-          filter: "videoandaudio",
-        });
-
-      await new Promise<void>((resolve, reject) => {
-        const stream = ytdl.downloadFromInfo(info, { format });
-        const fileStream = fs.createWriteStream(outputPath);
-        stream.pipe(fileStream);
-        stream.on("error", reject);
-        fileStream.on("finish", resolve);
-        fileStream.on("error", reject);
+      await youtubedl(url, {
+        output: outputPath,
+        format: "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+        noPlaylist: true,
+        mergeOutputFormat: "mp4",
+        ffmpegLocation: "ffmpeg",
+        ...(hasCookies() ? { cookies: COOKIES_PATH } : {}),
       });
     } catch (error: any) {
       throw new Error(`Gagal mengunduh video: ${error.message}`);
@@ -56,18 +60,14 @@ export class YoutubeService {
 
   async downloadAudio(url: string, outputPath: string): Promise<void> {
     try {
-      const info = await ytdl.getInfo(url);
-
-      await new Promise<void>((resolve, reject) => {
-        const stream = ytdl.downloadFromInfo(info, {
-          quality: "highestaudio",
-          filter: "audioonly",
-        });
-        const fileStream = fs.createWriteStream(outputPath);
-        stream.pipe(fileStream);
-        stream.on("error", reject);
-        fileStream.on("finish", resolve);
-        fileStream.on("error", reject);
+      await youtubedl(url, {
+        output: outputPath,
+        extractAudio: true,
+        audioFormat: "mp3",
+        audioQuality: "192k" as any,
+        ffmpegLocation: "ffmpeg",
+        noPlaylist: true,
+        ...(hasCookies() ? { cookies: COOKIES_PATH } : {}),
       });
     } catch (error: any) {
       throw new Error(`Gagal mengunduh audio: ${error.message}`);
