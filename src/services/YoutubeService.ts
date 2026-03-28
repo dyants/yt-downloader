@@ -1,6 +1,17 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 import { youtubeDl as youtubedl, Payload } from "youtube-dl-exec";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Path ke cookies file yang ditulis oleh server.ts
+const COOKIES_PATH = path.resolve(__dirname, "../../cookies.txt");
+const hasCookies = () => fs.existsSync(COOKIES_PATH) && fs.statSync(COOKIES_PATH).size > 0;
 
 const execAsync = promisify(exec);
 
@@ -16,8 +27,9 @@ export class YoutubeService {
         noCheckCertificates: true,
         noWarnings: true,
         preferFreeFormats: true,
-        addHeader: ["referer:youtube.com", "user-agent:googlebot"],
         noPlaylist: true,
+        // Gunakan cookies jika tersedia (untuk bypass bot detection di server)
+        ...(hasCookies() ? { cookies: COOKIES_PATH } : {}),
       })) as Payload;
 
       return {
@@ -42,6 +54,7 @@ export class YoutubeService {
         output: outputPath,
         format: "mp4",
         noPlaylist: true,
+        ...(hasCookies() ? { cookies: COOKIES_PATH } : {}),
       });
     } catch (error: any) {
       throw new Error(`Gagal mengunduh video: ${error.message}`);
@@ -57,6 +70,7 @@ export class YoutubeService {
         audioQuality: "192k" as any,
         ffmpegLocation: "ffmpeg",
         noPlaylist: true,
+        ...(hasCookies() ? { cookies: COOKIES_PATH } : {}),
       });
     } catch (error: any) {
       throw new Error(`Gagal mengunduh audio: ${error.message}`);
