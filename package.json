@@ -21,10 +21,10 @@
     "express": "^5.1.0",
     "node-cron": "^4.2.1",
     "winston": "^3.17.0",
-    "youtube-dl-exec": "^3.0.22",
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
+    "@types/ytdl-core": "^4.11.5",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
