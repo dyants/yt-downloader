@@ -1,4 +1,4 @@
-import ytdl from "ytdl-core";
+import ytdl from "@distube/ytdl-core";
 import fs from "fs";
 
 export class YoutubeService {
@@ -34,8 +34,7 @@ export class YoutubeService {
       const format =
         ytdl.chooseFormat(info.formats, {
           quality: "highestvideo",
-          filter: (f) =>
-            f.container === "mp4" && !!f.hasVideo && !!f.hasAudio,
+          filter: (f) => f.container === "mp4" && !!f.hasVideo && !!f.hasAudio,
         }) ??
         ytdl.chooseFormat(info.formats, {
           quality: "highestvideo",
