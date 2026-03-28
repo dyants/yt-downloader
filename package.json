@@ -24,7 +24,6 @@
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
-    "@types/ytdl-core": "^4.11.5",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
